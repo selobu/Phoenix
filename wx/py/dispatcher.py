@@ -28,7 +28,7 @@ senders = {}
 _boundMethods = weakref.WeakKeyDictionary()
 
 
-def connect(receiver, signal=Any, sender=Any, weak=True):
+def connect(receiver, signal=Any, sender=Anonymous, weak=True):
     """
     Connect receiver to sender for signal.
 
@@ -52,7 +52,7 @@ def connect(receiver, signal=Any, sender=Any, weak=True):
     else:
         connections[senderkey] = signals
         # Keep track of senders for cleanup.
-        if sender not in (None, Any):
+        if sender not in (None, Anonymous):
             def remove(object, senderkey=senderkey):
                 _removeSender(senderkey=senderkey)
             # Skip objects that can not be weakly referenced, which means
@@ -73,7 +73,7 @@ def connect(receiver, signal=Any, sender=Any, weak=True):
         pass
     receivers.append(receiver)
 
-def disconnect(receiver, signal=Any, sender=Any, weak=True):
+def disconnect(receiver, signal=Any, sender=Anonymous, weak=True):
     """Disconnect receiver from sender for signal.
 
     Disconnecting is not required. The use of disconnect is the same as for
@@ -99,7 +99,7 @@ def send(signal, sender=Anonymous, **kwds):
     Return a list of tuple pairs [(receiver, response), ... ].
     If sender is not specified, signal is sent anonymously."""
     senderkey = id(sender)
-    anykey = id(Any)
+    anonymous_sender_key = id(Anonymous)
     # Get receivers that receive *this* signal from *this* sender.
     receivers = []
     try:
@@ -118,7 +118,7 @@ def send(signal, sender=Anonymous, **kwds):
     # Add receivers that receive *this* signal from *any* sender.
     anyreceivers = []
     try:
-        anyreceivers = connections[anykey][signal]
+        anyreceivers = connections[anonymous_sender_key][signal]
     except KeyError:
         pass
     for receiver in anyreceivers:
@@ -127,7 +127,7 @@ def send(signal, sender=Anonymous, **kwds):
     # Add receivers that receive *any* signal from *any* sender.
     anyreceivers = []
     try:
-        anyreceivers = connections[anykey][Any]
+        anyreceivers = connections[anonymous_sender_key][Any]
     except KeyError:
         pass
     for receiver in anyreceivers:
